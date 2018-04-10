@@ -72,7 +72,7 @@ class com():
 
 
 
-    def cmd_send_recv(self,board_num,board_port,ctl_code,data_len,data):
+    def cmd_send_recv(self,board_num,board_port,ctl_code,data_len,data,exp_code):
      
      
         if(self.ser.is_open):
@@ -90,9 +90,8 @@ class com():
 
             barr = bytearray(recv_data)
 
-            if(barr[4] == 0x87):
+            if(barr[4] == exp_code):
                 return 1
             else:
                 return 0
 
-    

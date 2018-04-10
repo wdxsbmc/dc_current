@@ -28,18 +28,39 @@ def button_start():
     data.append(en_hz.get())
     data.append(en_time.get)
     data_len = len(data)
-    ret = SERIAL.cmd_send_recv(en_pld_borad.get(),en_pld_port.get(),0x07,data_len,data)
+    ret = SERIAL.cmd_send_recv(en_pld_borad.get(),en_pld_port.get(),0x07,data_len,data,0x87)
 
     if(ret == 1):
-        #thread for recv
+        # thread for recv
         test_run = 1
         thread.start_new_thread(SERIAL.read_data,())  
+        pkt_offset = 0
+     
         while test_run:  
             time.sleep(1)  
             print(SERIAL.message)
-            #parse message
-            
-        #close port
+            # parse message
+            while(pkt_offset < len(SERIAL.message))
+                pkt_head = SERIAL.message[pkt_offset:1]
+                while head != '0x68'
+                    pkt_offset = pkt_offset + 1
+                    head = SERIAL.message[pkt_offset:1]
+
+                pkt_len =  SERIAL.message[pkt_offset+4:1]   
+                pkt_data = SERIAL.message[pkt_offset+6:pkt_len-5]
+                pkt_offset = pkt_offset + pkt_len
+
+            # save data  
+            with open(".\dc_current_data.txt",'a') as fp:   
+                for(i in range(0,len(pkt_data)))
+                    fp.write(pkt_data[i:2]+',')  
+
+
+        # send stop cmd
+        data1 = []
+        ret = SERIAL.cmd_send_recv(en_pld_borad.get(),en_pld_port.get(),0x08,0,data1,0x88)
+
+        # close port
         SERIAL.port_close()
 
 # button stop
@@ -49,6 +70,7 @@ def button_stop():
     root.destroy()     
     print("test stop<<<")
 
+
 # centrer 
 def center_window(root, width, height):  
     screenwidth = root.winfo_screenwidth()  
@@ -56,6 +78,7 @@ def center_window(root, width, height):
     size = '%dx%d+%d+%d' % (width, height, (screenwidth - width)/2, (screenheight - height)/2)  
     #print(size)  
     root.geometry(size)  
+
 
 # param
 grid_column = 0
@@ -143,14 +166,14 @@ grid_column = grid_column + 1
 button = Button(root, text='Stop', width=25, command=button_stop)  
 button.grid(column = 1,row = grid_row, sticky=E, pady=40)
 
-#
+# layout weight
 root.columnconfigure(1,weight = 1)
 
 
 
 
 
-#main
+# main UI
 center_window(root, 400, 440)
 # 进入消息循环
 root.mainloop()
