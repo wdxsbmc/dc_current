@@ -24,9 +24,21 @@ def button_start():
 
     # start test
     data = []
-    data.append(en_model.get())
-    data.append(en_hz.get())
-    data.append(en_time.get)
+    data.append(int(en_model.get()))
+    n_hz = int(en_hz.get())
+    data.append(n_hz & 0xFF)
+    n_hz >>= 8
+    data.append(n_hz & 0xFF)  
+
+    n_time = int(en_time.get())
+    data.append(n_time & 0xFF)
+    n_time >>= 8
+    data.append(n_time & 0xFF)
+    n_time >>= 8
+    data.append(n_time & 0xFF)
+    n_time >>= 8
+    data.append(n_time & 0xFF)
+
     data_len = len(data)
     ret = SERIAL.cmd_send_recv(en_pld_borad.get(),en_pld_port.get(),0x07,data_len,data,0x87)
 
@@ -40,9 +52,9 @@ def button_start():
             time.sleep(1)  
             print(SERIAL.message)
             # parse message
-            while(pkt_offset < len(SERIAL.message))
+            while(pkt_offset < len(SERIAL.message)):
                 pkt_head = SERIAL.message[pkt_offset:1]
-                while head != '0x68'
+                while head != '0x68':
                     pkt_offset = pkt_offset + 1
                     head = SERIAL.message[pkt_offset:1]
 
@@ -52,7 +64,7 @@ def button_start():
 
             # save data  
             with open(".\dc_current_data.txt",'a') as fp:   
-                for(i in range(0,len(pkt_data)))
+                for i in range(0,len(pkt_data)):
                     fp.write(pkt_data[i:2]+',')  
 
 
@@ -144,7 +156,7 @@ lb3.grid(column = grid_column,row = grid_row,pady=10)
 grid_column = grid_column + 1
 en_hz = Entry(root)
 en_hz.grid(column = grid_column,row = grid_row,pady=10)
-en_hz.insert(10,"0")
+en_hz.insert(10,"1000")
 
 # dc total time
 grid_column = 0
@@ -155,7 +167,7 @@ lb4.grid(column = grid_column,row = grid_row,pady=10)
 grid_column = grid_column + 1
 en_time = Entry(root)
 en_time.grid(column = grid_column,row = grid_row,pady=10)
-en_time.insert(10,"0")
+en_time.insert(10,"5")
 
 # button
 grid_row = grid_row + 3
@@ -168,9 +180,6 @@ button.grid(column = 1,row = grid_row, sticky=E, pady=40)
 
 # layout weight
 root.columnconfigure(1,weight = 1)
-
-
-
 
 
 # main UI

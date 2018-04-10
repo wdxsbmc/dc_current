@@ -1,5 +1,5 @@
 import os
-#pip3 install pyserial
+# pip3 install pyserial
 import serial
 from serial import *
 
@@ -11,7 +11,7 @@ class com():
         '''
            init serial, send recive data
         '''
-        self.message=''
+        self.message = []
 
     def init_com(self,com_port):
         # 创建一个com_com
@@ -36,35 +36,37 @@ class com():
         return number 
 
     def read_data(self):  
-        while True:  
-            data=self.ser.readline()  
-            self.message+=data  
+        #while True:  
+        data=self.ser.read_all()
+        self.message.extend(data)
 
     '''
         68H	Addr	SubAddr	07H	07H	CUR_MOD	Freq	TotalS	CS	16H
-    test:  68  1    1          07 07  0       1      1       n   16h
+    test:  FE FE FE FE 68 01 FF 07 07 00 E8 03 05 00 00 00 66 16
     '''
     def make_packet(self,board_num,board_port,ctl_code,data_len,data):
-        #pkt = bytearray([0xf0,0x14,0x09,0xe0,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x28,0x00,0x00,0x00,0x00,0x00,0x00,0x00])
-
+    
         checksum = 0
         pkt = [] 
-        #bytearray()
-        #make cmd pkt
-        #head
+
+        # head
+        pkt.append(0xFE)
+        pkt.append(0xFE)
+        pkt.append(0xFE)
+        pkt.append(0xFE)
         pkt.append(0x68)
-        pkt.append(board_num)
-        pkt.append(board_port)
+        pkt.append(int(board_num))
+        pkt.append(int(board_port))
         pkt.append(ctl_code)
         pkt.append(data_len)
 
-        #data
+        # data
         pkt.extend(data)       
 
-        #udpate checksum
+        # udpate checksum
         if(len(pkt) > 0):
             for i in range(0,len(pkt)):
-                checksum = checksum + pkt[i]
+                checksum = checksum + int(pkt[i])
 
         pkt.append(checksum%256)
         pkt.append(0x16)
@@ -77,14 +79,13 @@ class com():
      
         if(self.ser.is_open):
 
-            #data = bytearray([0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x28,0x00,0x00,0x00,0x00,0x00,0x00,0x00])
-
-            cmd = self.make_packet(self,board_num,board_port,ctl_code,data_len,data)
+            cmd = self.make_packet(board_num, board_port, ctl_code, data_len, data)
             
+            # cmd = [0x01, 0x05, 0x91, 0xF5, 0x00, 0x00, 0xF1, 0x04]
             print(cmd)
 
-            self.ser.send_data(cmd)
-            self.ser.read_data()
+            self.send_data(cmd)
+            self.read_data()
 
             recv_data = self.message[0:7]       
 
