@@ -122,7 +122,7 @@ def button_start():
         return
     SERIAL.port_open()
     SERIAL.message.clear()
-
+    
     # start test
     data = []
     data.append(int(en_model.get()))
