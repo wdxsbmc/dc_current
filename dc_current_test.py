@@ -15,15 +15,19 @@ root = tkinter.Tk()
 root.title("DC Current TestV1.0.0")
 SERIAL = com()
 
+
+
+
 # read save data thread
 def read_data_thd(SERIAL, test_run):
-    time.sleep(1)
-    while test_run:       
-        SERIAL.read_data()
-        time.sleep(1)
+    #time.sleep(1)
+    while test_run:   
+        if(SERIAL.port_is_open()):    
+            SERIAL.read_data()
+            time.sleep(0.5)
 
 
-def parse_save_thd(SERIAL, test_run):
+def parse_save_thd(SERIAL, test_run, file_name):
 
     pkt_offset = 0 
     time.sleep(1)  
@@ -34,6 +38,7 @@ def parse_save_thd(SERIAL, test_run):
 
     while test_run:       
         
+        time.sleep(0.5)
         # get pkt
         parse_msg.extend(SERIAL.message[old_len:])
         old_len = len(parse_msg)
@@ -49,7 +54,7 @@ def parse_save_thd(SERIAL, test_run):
                 break
 
             # find pkt head
-            print(pkt_offset,len(parse_msg))
+            #print(pkt_offset,len(parse_msg))
             b_find = 0
             for i in range(pkt_offset,len(parse_msg)):
                 if(parse_msg[i - 1] == 0xFE and parse_msg[i] == 0x68):
@@ -73,7 +78,8 @@ def parse_save_thd(SERIAL, test_run):
             print(pkt_data)
 
             # save data  
-            with open(".\dc_current_data.txt",'a') as fp:   
+
+            with open(file_name,'a') as fp:   
                 for i in range(0,len(pkt_data),2):
                     #dcL dcH =>int16
                     dc_value = 0
@@ -90,11 +96,17 @@ def parse_save_thd(SERIAL, test_run):
 # button sttart
 def button_start():
     print("test start>>>")
+    button1.config(state="disabled")
+    # init filename
+    file_name = ".\dc_current_data"
+    file_name += time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(time.time()))
+    file_name += ".txt"
+    en_txt.insert(20,file_name)
 
-               
     # init com
     SERIAL.init_com('com' + en_com.get())
     SERIAL.port_open()
+    SERIAL.message.clear()
 
     # start test
     data = []
@@ -121,7 +133,7 @@ def button_start():
         test_run = 1
         _thread.start_new_thread(read_data_thd,(SERIAL, test_run))  
         time.sleep(1)
-        _thread.start_new_thread(parse_save_thd,(SERIAL, test_run))  
+        _thread.start_new_thread(parse_save_thd,(SERIAL, test_run, file_name))  
 
 
 
@@ -129,17 +141,19 @@ def button_start():
 # button stop
 def button_stop():
     test_run = 0
-    time.sleep(10)
+    time.sleep(3)
     # send stop cmd
     data1 = []
     ret = SERIAL.cmd_send_recv(en_pld_borad.get(),en_pld_port.get(),0x08,0,data1,0x88)
 
     # close port
+    SERIAL.message.clear()
     SERIAL.port_close()
 
 
-    root.destroy()     
+    #root.destroy()     
     print("test stop<<<")
+    button1.config(state="normal")
 
 
 # centrer 
@@ -154,8 +168,12 @@ def center_window(root, width, height):
 # param
 grid_column = 0
 grid_row = 0
-lb1 = Label(root, text="电流测试参数：") 
+lb1 = Label(root, text="电流测试文件：") 
 lb1.grid(column = grid_column,row = grid_row)
+
+grid_column = grid_column + 1
+en_txt = Entry(root)
+en_txt.grid(column = grid_column,row = grid_row,pady=10)
 
 
 # com
@@ -242,6 +260,6 @@ root.columnconfigure(1,weight = 1)
 
 
 # main UI
-center_window(root, 400, 440)
+center_window(root, 450, 440)
 # 进入消息循环
 root.mainloop()
