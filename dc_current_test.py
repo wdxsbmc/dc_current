@@ -35,6 +35,8 @@ def parse_save_thd(SERIAL, test_run, file_name):
     old_offset = 0
     parse_msg = SERIAL.message[old_len:]
     b_find = 0
+    b_finish = 0
+    
 
     while test_run:       
         
@@ -42,7 +44,7 @@ def parse_save_thd(SERIAL, test_run, file_name):
         # get pkt
         parse_msg.extend(SERIAL.message[old_len:])
         old_len = len(parse_msg)
-
+        print(parse_msg)
         # parse message
         while(pkt_offset < len(parse_msg)): 
 
@@ -71,14 +73,17 @@ def parse_save_thd(SERIAL, test_run, file_name):
                 pkt_offset = pkt_offset + 6  #skip first rsp
                 continue
 
+            # check finsih
+            if(parse_msg[pkt_offset + 8] == 0x80):
+                b_finish = 1
+
             # get pkt data
             pkt_data_len = pkt_data_len - 5  #skip Seq(4bytes)+CUR_MOD(1byte)    
-            pkt_data = parse_msg[pkt_offset+9:pkt_offset+9+pkt_data_len]
-            pkt_offset = pkt_offset + 9 + pkt_data_len 
+            pkt_data = parse_msg[pkt_offset+10:pkt_offset+10+pkt_data_len]
+            pkt_offset = pkt_offset + 10 + pkt_data_len 
             print(pkt_data)
 
             # save data  
-
             with open(file_name,'a') as fp:   
                 for i in range(0,len(pkt_data),2):
                     #dcL dcH =>int16
@@ -87,6 +92,11 @@ def parse_save_thd(SERIAL, test_run, file_name):
                     dc_value <<= 8 
                     dc_value = dc_value | pkt_data[i]
                     fp.write(str(dc_value) + ',')  
+
+            # check finish
+            if(b_finish == 1):
+                # stop parse           
+                return 
 
 
             
@@ -101,10 +111,15 @@ def button_start():
     file_name = ".\dc_current_data"
     file_name += time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(time.time()))
     file_name += ".txt"
-    en_txt.insert(20,file_name)
+    en_lb.config(state="normal")
+    en_lb.insert(20, file_name)
+    en_lb.config(state="disabled")
 
     # init com
-    SERIAL.init_com('com' + en_com.get())
+    if(SERIAL.init_com('com' + en_com.get()) == 0):
+        button1.config(state="normal")
+        print("com%d open fail<<<"%int(en_com.get()))
+        return
     SERIAL.port_open()
     SERIAL.message.clear()
 
@@ -168,13 +183,14 @@ def center_window(root, width, height):
 # param
 grid_column = 0
 grid_row = 0
-lb1 = Label(root, text="电流测试文件：") 
+lb1 = Label(root, text="测试文件：") 
 lb1.grid(column = grid_column,row = grid_row)
 
 grid_column = grid_column + 1
-en_txt = Entry(root)
-en_txt.grid(column = grid_column,row = grid_row,pady=10)
-
+en_lb = Entry(root)
+en_lb.grid(column = grid_column,row = grid_row,pady=10)
+en_lb.insert(10,"")
+en_lb.config(state="disabled")
 
 # com
 grid_column = 0
@@ -187,6 +203,7 @@ grid_column = grid_column + 1
 en_com = Entry(root)
 en_com.grid(column = grid_column,row = grid_row,pady=10)
 en_com.insert(10,"0")
+
 
 # pld board
 grid_column = 0

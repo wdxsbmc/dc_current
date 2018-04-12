@@ -17,10 +17,15 @@ class com():
     def init_com(self,com_port):
         # 创建一个com_com
         self.com_port = com_port
-        self.ser = serial.Serial(port=self.com_port, baudrate=115200, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS) 
-        if not self.ser.isOpen():  
-            self.ser.open()  
-
+        try:
+            self.ser = serial.Serial(port=self.com_port, baudrate=115200, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS) 
+        except IOError:
+            return 0   
+        else:
+            if not self.ser.isOpen():  
+                self.ser.open()  
+        return 1
+        
     def port_is_open(self):
         return  self.ser.isOpen()
 
