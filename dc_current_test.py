@@ -15,7 +15,10 @@ import matplotlib.pyplot as plt
 test_run = 0
 
 root = tkinter.Tk()
-root.title("DC Current TestV1.0.1")
+
+
+
+root.title("DC Current TestV1.0.2")
 SERIAL = com()
 result_data = []
 
@@ -90,6 +93,9 @@ def parse_save_thd(SERIAL, test_run, file_name):
             # save data
             with open(file_name, 'a') as fp:
                 for i in range(0, len(pkt_data), 2):
+                    if(i+2 > len(pkt_data)):
+                        print(i,len(pkt_data))
+                        break
                     #dcL dcH =>int16
                     dc_value = 0
                     dc_value = pkt_data[i + 1]
