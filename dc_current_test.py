@@ -18,7 +18,7 @@ root = tkinter.Tk()
 
 
 
-root.title("DC Current TestV1.0.2")
+root.title("DC Current TestV1.0.3")
 SERIAL = com()
 result_data = []
 
@@ -72,8 +72,11 @@ def parse_save_thd(SERIAL, test_run, file_name):
             if (b_find == 0):
                 break
 
-            # get pkt data len
-            print(pkt_offset)
+            # get pkt data len          
+            if(pkt_offset + 4 > len(parse_msg)):
+                print(pkt_offset,len(parse_msg))
+                continue
+
             pkt_data_len = parse_msg[pkt_offset + 4]
             if (pkt_data_len == 0):
                 pkt_offset = pkt_offset + 6  #skip first rsp
